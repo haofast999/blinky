@@ -22,7 +22,7 @@ Each session logs blinks, debt over time and alerts, and can be exported as CSV 
 
 ## Results
 
-In a within-subject pilot with four participants (intervention off vs on), the deep blink rate rose from **0.22 to 0.61 per minute**.
+In a within-subject pilot with five participants (intervention off vs on), the deep blink rate rose from **0.22 to 0.61 per minute** (complete session logs from four participants; one log was lost). All five found the cue non-intrusive.
 
 ## Built with AI
 
