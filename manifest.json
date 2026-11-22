@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Blinky",
+  "version": "2.0",
+  "description": "Biometric Fatigue Intervention System",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Blinky Regulator",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "panel.html", "panel.js",
+        "detector.html", "detector.js",
+        "p5.js", "ml5.min.js",
+        "icons/icon16.png", "icons/icon32.png",
+        "icons/icon48.png", "icons/icon128.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

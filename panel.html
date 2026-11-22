@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Permissions-Policy" content="camera=*">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nico+Moji&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { width:361px; background:#e7e7e7; overflow:hidden;
+      font-family:'Nico Moji','Courier New',monospace; }
+
+    #cal-wrap { width:361px; display:block; }
+    #cal-wrap canvas { display:block; }
+
+    #run-view { display:none; width:361px; background:#e7e7e7; }
+
+    /* Tab bar */
+    .t-bar-wrap { padding:10px 21px 0; }
+    .t-bar { position:relative; width:319px; height:50px;
+      border:1px solid #000; border-radius:20px; overflow:hidden; }
+    .t-pill { position:absolute; top:0; height:50px; background:#000;
+      border-radius:20px; transition:left .25s ease, width .25s ease; pointer-events:none; }
+    .t-btn { position:absolute; z-index:2; height:50px; line-height:50px;
+      font-family:'Nico Moji',monospace; font-size:18px; cursor:pointer;
+      color:#000; white-space:nowrap; }
+    .t-btn.active { color:#fff; }
+    .t-btn[data-tab="focus"]     { left:11px; }
+    .t-btn[data-tab="customize"] { left:106px; }
+    .t-btn[data-tab="data"]      { left:246px; }
+
+    .c-wrap { padding:12px 21px 0; overflow:hidden; }
+    .lbl { display:block; font-family:'Nico Moji',monospace; font-size:20px;
+      color:#000; margin-bottom:8px; }
+
+    /* Focus */
+    .timer-box { width:319px; height:101px; border:1px solid #000;
+      border-radius:20px; display:flex; align-items:center; justify-content:center;
+      margin-bottom:13px; }
+    .timer-text { font-family:'Nico Moji',monospace; font-size:64px; color:#000;
+      letter-spacing:2px; line-height:1; }
+    #btn-restart-focus { display:flex; align-items:center; justify-content:center;
+      width:319px; height:32px; border:1px solid #000; border-radius:20px;
+      background:none; cursor:pointer; font-family:'Nico Moji',monospace;
+      font-size:16px; color:#000; margin-bottom:18px; }
+
+    /* Brief box — now a canvas + text */
+    .brief-box { width:319px; height:253px; border:1px solid #000;
+      border-radius:11px; background:#000; overflow:hidden;
+      display:flex; flex-direction:column; }
+    #brief-cvs { width:319px; height:188px; display:block; }
+    .brief-text { flex:1; font-family:'Nico Moji',monospace; font-size:18px;
+      color:#fff; text-align:center; line-height:1.5;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .status-good   { color:#00ffaa; }
+    .status-mid    { color:#ffcc00; }
+    .status-warn   { color:#ff7700; }
+    .status-danger { color:#ff3344; }
+
+    /* Customize */
+    .mode-btn { width:319px; height:71px; border-radius:20px; display:flex;
+      flex-direction:column; justify-content:center; align-items:flex-start;
+      padding:0 40px 0 20px; cursor:pointer; margin-bottom:8px; position:relative; }
+    .mode-btn.on  { background:#000; border:none; }
+    .mode-btn.off { background:none; border:1px solid #000; }
+    .mode-btn:last-of-type { margin-bottom:15px; }
+    .mode-title { font-family:'Nico Moji',monospace; font-size:20px; }
+    .mode-btn.on  .mode-title { color:#fff; }
+    .mode-btn.off .mode-title { color:#000; }
+    .mode-sub { font-family:'Nico Moji',monospace; font-size:13px; margin-top:4px; }
+    .mode-btn.on  .mode-sub { color:rgba(255,255,255,0.65); }
+    .mode-btn.off .mode-sub { color:rgba(0,0,0,0.55); }
+    .info-badge { position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:15px; }
+    .mode-btn.on  .info-badge { color:rgba(255,255,255,0.7); }
+    .mode-btn.off .info-badge { color:rgba(0,0,0,0.5); }
+    .eff-grid { display:grid; grid-template-columns:156px 159px; gap:8px;
+      width:319px; margin-top:10px; }
+    .eff-btn { height:123px; border-radius:11px; display:flex; align-items:center;
+      justify-content:center; cursor:pointer; font-family:'Nico Moji',monospace; font-size:20px; }
+    .eff-btn.on  { background:#000; color:#fff; border:none; }
+    .eff-btn.off { background:none; border:1px solid #000; color:#000; }
+
+    /* Data */
+    #cam-cvs { display:block; width:319px; height:189px; border-radius:20px;
+      background:#000; margin-bottom:10px; }
+    .data-lbl-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .data-lbl-row .lbl { margin-bottom:0; }
+    .export-btn { display:flex; align-items:center; gap:4px; background:#fff;
+      border:none; border-radius:20px; padding:0 12px; height:32px; cursor:pointer;
+      font-family:'Nico Moji',monospace; font-size:11px; color:#000; }
+    .data-box { width:319px; height:160px; background:#000; border-radius:20px;
+      position:relative; overflow:hidden; }
+    #chart-cvs { width:100%; height:100%; display:block; }
+    .bottom-row { display:flex; gap:8px; width:319px; margin-top:10px; }
+    .btn-clear, .btn-restart { flex:1; height:46px; border:1px solid #000;
+      border-radius:10px; background:none; cursor:pointer; color:#000;
+      font-family:'Nico Moji',monospace; font-size:16px; }
+  </style>
+  <script src="p5.js"></script>
+  <script src="ml5.min.js"></script>
+</head>
+<body>
+  <div id="cal-wrap"></div>
+
+  <div id="run-view">
+    <div class="t-bar-wrap">
+      <div class="t-bar">
+        <div class="t-pill" id="t-pill"></div>
+        <div class="t-btn active" data-tab="focus">focus</div>
+        <div class="t-btn"        data-tab="customize">customize</div>
+        <div class="t-btn"        data-tab="data">data</div>
+      </div>
+    </div>
+
+    <div id="tab-focus" class="c-wrap">
+      <div class="lbl">Focus Time</div>
+      <div class="timer-box"><span class="timer-text" id="timer-disp">00:00</span></div>
+      <button id="btn-restart-focus"
+        onclick="chrome.runtime.sendMessage({type:'RESTART_SESSION'})">Restart Focus</button>
+      <div class="lbl">Briefing</div>
+      <div class="brief-box">
+        <canvas id="brief-cvs"></canvas>
+        <div class="brief-text" id="brief-stats">
+          Blink Rate: 0% below normal<br>
+          <span class="status-good">Status: Good</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-customize" class="c-wrap" style="display:none">
+      <div class="lbl">Select Mode</div>
+      <div class="mode-btn on" id="m-acc" data-mode="accumulation">
+        <span class="mode-title">Accumulate</span>
+        <span class="mode-sub">Long-term tear-film debt intervention</span>
+        <span class="info-badge">①</span>
+      </div>
+      <div class="mode-btn off" id="m-inst" data-mode="instant">
+        <span class="mode-title">Instant</span>
+        <span class="mode-sub">Immediate feedback on timeout</span>
+        <span class="info-badge">①</span>
+      </div>
+      <div class="lbl">Blink Effect</div>
+      <div class="eff-grid">
+        <div class="eff-btn on"  id="e-vignette" data-eff="vignette">Fade</div>
+        <div class="eff-btn off" id="e-confetti" data-eff="confetti">Confetti</div>
+        <div class="eff-btn off" id="e-ring"     data-eff="ring">Ring</div>
+        <div class="eff-btn off" id="e-blur"     data-eff="blur">Blur</div>
+      </div>
+    </div>
+
+    <div id="tab-data" class="c-wrap" style="display:none">
+      <div class="lbl">camara</div>
+      <canvas id="cam-cvs"></canvas>
+      <div class="data-lbl-row">
+        <div class="lbl">data</div>
+        <button class="export-btn" id="exp-btn">↓ Export</button>
+      </div>
+      <div class="data-box"><canvas id="chart-cvs"></canvas></div>
+      <div id="chart-scroll-track" style="width:319px;height:18px;background:#222;border-radius:9px;position:relative;cursor:ew-resize;margin:6px 0;user-select:none;overflow:hidden;">
+        <div id="chart-scroll-thumb" style="position:absolute;top:3px;height:12px;border-radius:6px;background:#555;pointer-events:none;"></div>
+      </div>
+      <div style="font-size:10px;color:#888;text-align:center;margin-bottom:4px;font-family:monospace;">← Drag for history &nbsp;|&nbsp; Double-click for live →</div>
+      <div class="bottom-row">
+        <button class="btn-clear"   id="btn-clear">Clear Data</button>
+        <button class="btn-restart" id="btn-restart">Restart Blinky</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>
